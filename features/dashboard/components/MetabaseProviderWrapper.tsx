@@ -56,9 +56,16 @@ export default function MetabaseProviderWrapper({ children, alias: propAlias }: 
 
   // Build authConfig when SDK is available
   const authConfig = useMemo(() => {
-    if (!metabaseSdk) return null
-    const base = `/api/metabase/token`;
-    const authProviderUri = alias ? `${base}?as=${encodeURIComponent(alias)}` : base;
+    if (!metabaseSdk) return null;
+
+    // Obtener la URL base del entorno actual
+    const baseUrl = typeof window !== 'undefined'
+      ? window.location.origin
+      : '';
+
+    const authProviderUri = alias
+      ? `${baseUrl}/api/metabase/token?as=${encodeURIComponent(alias)}`
+      : `${baseUrl}/api/metabase/token`;
 
     return metabaseSdk.defineMetabaseAuthConfig({
       metabaseInstanceUrl: metabaseUrl,
@@ -103,7 +110,7 @@ export default function MetabaseProviderWrapper({ children, alias: propAlias }: 
         ],
       },
       components: {
-        dashboard: { backgroundColor: "#F2F3F5", gridBorderColor: "#F2F3F5", card: { backgroundColor: "#FFFFFF", border: "12px double #F2F3F5" } },
+        dashboard: { backgroundColor: "#F2F3F5", gridBorderColor: "#F2F3F5", card: { backgroundColor: "#FFFFFF", border: "5px outset #F2F3F5" } },
         table: { stickyBackgroundColor: "#F0F4FF", cell: { backgroundColor: "#FFFFFF", textColor: "#0F1533", fontSize: "13px" }, idColumn: { backgroundColor: "#EFF3FF", textColor: "#21409A" } },
         number: { value: { fontSize: "26px", lineHeight: "24px" } },
         cartesian: { padding: "8px 10px", label: { fontSize: "10px" }, splitLine: { lineStyle: { color: "#D8DDEF" } }, goalLine: { label: { fontSize: "12px" } } },
