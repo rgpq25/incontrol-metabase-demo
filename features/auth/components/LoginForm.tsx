@@ -1,140 +1,198 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { X, AlertCircle } from "lucide-react"
-import * as Dialog from "@radix-ui/react-dialog"
+import * as Dialog from '@radix-ui/react-dialog';
+import { AlertCircle, Eye, EyeOff, X } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function LoginForm() {
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showErrorDialog, setShowErrorDialog] = useState(false)
+    const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [showErrorDialog, setShowErrorDialog] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+    async function handleSubmit(event: React.FormEvent) {
+        event.preventDefault();
+        setError(null);
+        setLoading(true);
 
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include",
-      })
-
-      if (!res.ok) {
         try {
-          const jsonData = await res.json()
-          setError(jsonData.error || "Credenciales inválidas")
-        } catch {
-          const text = await res.text()
-          setError(text || "Credenciales inválidas")
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                try {
+                    const jsonData = await response.json();
+                    setError(jsonData.error || 'Invalid credentials');
+                } catch {
+                    const text = await response.text();
+                    setError(text || 'Invalid credentials');
+                }
+                setShowErrorDialog(true);
+                return;
+            }
+
+            router.push('/');
+            router.refresh();
+        } catch (err) {
+            setError('Server error. Please try again later.');
+            setShowErrorDialog(true);
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
-        setShowErrorDialog(true)
-        return
-      }
-
-      // Success: backend sets cookie
-      router.push('/')
-      router.refresh()
-    } catch (err) {
-      setError("Error del servidor. Por favor, intenta más tarde.")
-      setShowErrorDialog(true)
-      console.error(err)
-    } finally {
-      setLoading(false)
     }
-  }
 
-  return (
-    <>
-      <div className="w-full max-w-lg mx-auto bg-white dark:bg-zinc-800 p-12 rounded-3xl shadow-lg">
-        <div className="flex justify-center mb-8">
-          <Image src="/images/logo.png" alt="inControl logo" width={180} height={90} priority />
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <h2 className="text-2xl font-semibold mb-6 text-center text-zinc-900 dark:text-zinc-100">Sign in</h2>
-
-          <label className="block mb-4">
-            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="mt-2 block w-full border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white dark:bg-zinc-700 dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-
-          <label className="block mb-6">
-            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">Password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-2 block w-full border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white dark:bg-zinc-700 dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-
-          <button
-            type="submit"
-            className="w-full inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
-      </div>
-
-      <Dialog.Root open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-zinc-800 rounded-3xl shadow-2xl p-0 overflow-hidden">
-            {/* Header with icon */}
-            <div className="bg-linear-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/10 px-8 py-8 flex items-center justify-between border-b border-red-200 dark:border-red-800/30">
-              <div className="flex items-center gap-3">
-                <div className="bg-red-100 dark:bg-red-900/30 rounded-full p-3">
-                  <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+    return (
+        <>
+            <div className="mx-auto w-full max-w-[420px]">
+                <div className="mb-28">
+                    <Image
+                        src="/images/logo.png"
+                        alt="inControl logo"
+                        width={153}
+                        height={46}
+                        priority
+                        className="h-auto w-[153px]"
+                    />
                 </div>
-                <Dialog.Title className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                  Authentication error
-                </Dialog.Title>
-              </div>
-              <Dialog.Close asChild>
-                <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </Dialog.Close>
+
+                <form onSubmit={handleSubmit}>
+                    <div className="space-y-2 text-center">
+                        <h2 className="text-[40px] font-bold leading-[1.1] text-[var(--color-text-strong)]">
+                            Log In
+                        </h2>
+                        <p className="text-base leading-7 text-[var(--color-text-primary)]">
+                            Good to see you again - sign in to your account to continue.
+                        </p>
+                    </div>
+
+                    <div className="mt-10 space-y-4">
+                        <label htmlFor="email" className="sr-only">
+                            Email
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
+                            required
+                            autoComplete="email"
+                            placeholder="Email"
+                            className="h-11 w-full rounded-lg border border-[var(--color-brand-300)] bg-[var(--color-surface)] px-4 text-base text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-600)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-100)]"
+                        />
+
+                        <label htmlFor="password" className="sr-only">
+                            Password
+                        </label>
+                        <div className="relative">
+                            <input
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                                required
+                                autoComplete="current-password"
+                                placeholder="Enter a password"
+                                className="h-11 w-full rounded-lg border border-[var(--color-brand-300)] bg-[var(--color-surface)] px-4 pr-10 text-base text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-600)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-100)]"
+                            />
+
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((previous) => !previous)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-brand-600)]"
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="mx-auto block text-sm text-[var(--color-brand-600)] underline underline-offset-4"
+                        >
+                            Can&apos;t remember your password?
+                        </button>
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="mt-6 h-11 w-full rounded-lg bg-[var(--color-brand-600)] text-sm font-bold text-white transition-colors hover:bg-[#1f45af] disabled:cursor-not-allowed disabled:bg-[#9CA3BA]"
+                        disabled={loading}
+                    >
+                        {loading ? 'Signing in...' : 'Sign In'}
+                    </button>
+                </form>
+
+                <div className="mt-8 border-t border-[var(--color-border-soft)] pt-8 text-center">
+                    <h3 className="text-3xl font-bold text-[var(--color-text-strong)]">First time?</h3>
+                    <p className="mt-2 text-base text-[var(--color-text-primary)]">
+                        Let&apos;s get you started - create your account.
+                    </p>
+                    <button
+                        type="button"
+                        className="mt-5 h-10 rounded-lg border border-[var(--color-border-soft)] bg-[var(--color-surface)] px-6 text-sm font-bold text-[var(--color-text-primary)]"
+                    >
+                        Sign Up
+                    </button>
+                </div>
             </div>
 
-            {/* Content */}
-            <div className="px-8 py-6">
-              <Dialog.Description className="text-sm text-zinc-700 dark:text-zinc-300 mb-4 font-medium">
-                {error || "An error occurred during sign in."}
-              </Dialog.Description>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Please verify your email and password and try again.
-              </p>
-            </div>
+            <Dialog.Root open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 bg-black/45 backdrop-blur-[1px]" />
+                    <Dialog.Content className="panel-shadow fixed left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-surface)] p-0">
+                        <div className="flex items-center justify-between border-b border-[#F7CACA] bg-[#FDF2F2] px-7 py-5">
+                            <div className="flex items-center gap-3">
+                                <div className="rounded-full bg-[#FCE8E8] p-2.5">
+                                    <AlertCircle className="h-5 w-5 text-[#C61010]" />
+                                </div>
+                                <Dialog.Title className="text-base font-bold text-[var(--color-text-strong)]">
+                                    Authentication error
+                                </Dialog.Title>
+                            </div>
 
-            {/* Footer */}
-            <div className="px-8 py-4 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-200 dark:border-zinc-700">
-              <Dialog.Close asChild>
-                <button className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
-                  OK
-                </button>
-              </Dialog.Close>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </>
-  )
+                            <Dialog.Close asChild>
+                                <button
+                                    type="button"
+                                    className="rounded-md p-1 text-[var(--color-text-muted)] transition-colors hover:bg-white hover:text-[var(--color-text-primary)]"
+                                    aria-label="Close dialog"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </Dialog.Close>
+                        </div>
+
+                        <div className="px-7 py-5">
+                            <Dialog.Description className="text-sm font-bold text-[var(--color-text-primary)]">
+                                {error || 'An error occurred during sign in.'}
+                            </Dialog.Description>
+                            <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-muted)]">
+                                Please verify your email and password and try again.
+                            </p>
+                        </div>
+
+                        <div className="border-t border-[var(--color-border-soft)] bg-[var(--color-surface-muted)] px-7 py-4">
+                            <Dialog.Close asChild>
+                                <button
+                                    type="button"
+                                    className="h-10 w-full rounded-lg bg-[var(--color-brand-600)] text-sm font-bold text-white transition-colors hover:bg-[#1f45af]"
+                                >
+                                    OK
+                                </button>
+                            </Dialog.Close>
+                        </div>
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+        </>
+    );
 }
