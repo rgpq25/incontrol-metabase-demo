@@ -1,121 +1,119 @@
 'use client';
 
 import {
-    LayoutDashboard,
-    FileText,
-    BookOpen,
     BarChart3,
-    PiggyBank,
-    ShieldCheck,
-    CheckCircle,
     Book,
-    Settings,
-    Star,
+    BookOpen,
+    CheckCircle,
     ChevronDown,
     ChevronRight,
+    FileText,
+    LayoutDashboard,
+    PiggyBank,
+    Settings,
+    ShieldCheck,
+    Star,
+    type LucideIcon,
 } from 'lucide-react';
-import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 interface MenuItem {
-    icon: React.ReactNode;
+    icon: LucideIcon;
     label: string;
     href?: string;
-    blocked?: boolean; // 🔹 nuevo
+    blocked?: boolean;
     children?: MenuItem[];
-    active?: boolean;
 }
 
+const menuItems: MenuItem[] = [
+    { icon: LayoutDashboard, label: 'Fee Dashboard', href: '/' },
+    { icon: FileText, label: 'Incontrol Panel', blocked: true },
+    { icon: BookOpen, label: 'Fee Library', href: '/collections' },
+    { icon: BarChart3, label: 'Analytics & Reports', blocked: true },
+    {
+        icon: PiggyBank,
+        label: 'Saving Opportunities',
+        children: [
+            { icon: ShieldCheck, label: 'Data integrity', blocked: true },
+            { icon: CheckCircle, label: 'Visa Mar', blocked: true },
+            { icon: Settings, label: 'TPE', blocked: true },
+            { icon: Settings, label: 'Opt Outs', blocked: true },
+        ],
+    },
+    { icon: ShieldCheck, label: 'Fee Validation', blocked: true },
+    { icon: Book, label: 'Resources', blocked: true },
+    { icon: Star, label: 'Favorites', blocked: true },
+];
+
 export function Sidebar() {
-    // 🔹 Saving Opportunities YA NO inicia expandido
+    const pathname = usePathname();
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-    const menuItems: MenuItem[] = [
-        // ✔️ ÚNICO QUE NAVEGA
-        { icon: <LayoutDashboard size={20} />, label: 'Fee Manager', href: '/' },
-
-        // 🔒 Bloqueados
-        { icon: <FileText size={20} />, label: 'Incontrol Panel', blocked: true },
-        { icon: <BookOpen size={20} />, label: 'Fee Library', blocked: true },
-        { icon: <BarChart3 size={20} />, label: 'Analytics & Reports', blocked: true },
-
-        // 🔒 Saving Opportunities sin expandir por defecto
-        {
-            icon: <PiggyBank size={20} />,
-            label: 'Saving Opportunities',
-            blocked: true,
-            children: [
-                { icon: <ShieldCheck size={18} />, label: 'Data integrity', blocked: true },
-                { icon: <CheckCircle size={18} />, label: 'Visa Mar', blocked: true },
-                { icon: <Settings size={18} />, label: 'TPE', blocked: true },
-                { icon: <Settings size={18} />, label: 'Opt Outs', blocked: true, active: true },
-            ],
-        },
-
-        // 🔒 Más bloqueados
-        { icon: <ShieldCheck size={20} />, label: 'Fee Validation', blocked: true },
-        { icon: <Book size={20} />, label: 'Resources', blocked: true },
-        { icon: <Star size={20} />, label: 'Favorites', blocked: true },
-    ];
-
-    const toggleExpand = (label: string, blocked?: boolean) => {
-        if (blocked) return; // 🔒 Evita expandir si está bloqueado
+    const toggleExpand = (item: MenuItem) => {
+        if (!item.children || item.blocked) return;
 
         setExpandedItems((prev) =>
-            prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
+            prev.includes(item.label) ? prev.filter((entry) => entry !== item.label) : [...prev, item.label]
         );
     };
 
     const renderMenuItem = (item: MenuItem, level = 0) => {
-        const hasChildren = item.children && item.children.length > 0;
+        const hasChildren = Boolean(item.children?.length);
         const isExpanded = expandedItems.includes(item.label);
-        const isActive = item.active;
         const isBlocked = item.blocked;
+        const isActive = item.href
+            ? item.href === '/'
+                ? pathname === '/'
+                : pathname.startsWith(item.href)
+            : false;
+        const Icon = item.icon;
+        const iconSize = level === 0 ? 16 : 14;
 
-        const onClick = () => toggleExpand(item.label, isBlocked)
         const className = `
-                    w-full flex items-center gap-3 py-3 text-left transition-colors relative z-10
-                    ${level === 0 ? 'px-4 hover:bg-blue-50' : 'pl-12 hover:bg-blue-50'}
-                    ${isActive ? 'bg-blue-600 text-white hover:bg-blue-700' : 'text-gray-700'}
-                    ${isBlocked ? 'opacity-50 cursor-not-allowed' : ''}
-                `
+            group flex w-full items-center gap-2 rounded-lg py-2 text-left text-sm leading-5 transition-colors
+            ${level === 0 ? 'px-3' : 'pl-8 pr-3'}
+            ${
+                isBlocked
+                    ? 'cursor-not-allowed text-[var(--color-text-muted)] opacity-70'
+                    : isActive
+                      ? 'bg-[var(--color-brand-100)] text-[var(--color-brand-600)]'
+                      : 'text-[var(--color-text-primary)] hover:bg-[var(--color-surface-muted)]'
+            }
+        `;
 
         return (
-            <div key={item.label} className="relative">
-                {level > 0 && (
-                    <>
-                        <div className="absolute left-5 top-0 bottom-0 w-px bg-gray-300" />
-                        <div
-                            className="absolute left-5 top-1/2 w-8 h-8 transform -translate-y-full
-                                    border-l border-b rounded-bl-lg border-gray-300 bg-white"
-                        />
-                    </>
-                )}
-
+            <div key={item.label}>
                 {item.href && !isBlocked ? (
                     <Link href={item.href} className={className}>
-                        <span className={`shrink-0 ${isActive ? 'text-white' : 'text-gray-600'}`}>
-                            {item.icon}
+                        <span className="shrink-0 text-[var(--color-brand-600)]">
+                            <Icon size={iconSize} />
                         </span>
 
-                        <span className="flex-1 font-medium">{item.label}</span>
+                        <span className="flex-1">{item.label}</span>
 
                         {hasChildren && (
-                            <span className={`mr-4 ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                            <span className="mr-1 text-[var(--color-text-muted)]">
                                 {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                             </span>
                         )}
                     </Link>
                 ) : (
-                    <button type="button" onClick={onClick} className={className} disabled={isBlocked}>
-                        <span className={`shrink-0 ${isActive ? 'text-white' : 'text-gray-600'}`}>
-                            {item.icon}
+                    <button
+                        type="button"
+                        onClick={() => toggleExpand(item)}
+                        className={className}
+                        disabled={isBlocked}
+                    >
+                        <span className="shrink-0 text-[var(--color-brand-600)]">
+                            <Icon size={iconSize} />
                         </span>
 
-                        <span className="flex-1 font-medium">{item.label}</span>
+                        <span className="flex-1">{item.label}</span>
 
                         {hasChildren && (
-                            <span className={`mr-4 ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                            <span className="mr-1 text-[var(--color-text-muted)]">
                                 {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                             </span>
                         )}
@@ -123,7 +121,7 @@ export function Sidebar() {
                 )}
 
                 {hasChildren && isExpanded && (
-                    <div className="bg-white">
+                    <div className="mt-1 space-y-1">
                         {item.children?.map((child) => renderMenuItem(child, level + 1))}
                     </div>
                 )}
@@ -134,41 +132,45 @@ export function Sidebar() {
     return (
         <aside
             className="
-              fixed top-16 left-0 w-64 h-[calc(100vh-4rem)]
-              bg-incontrol border-r border-gray-200
-              flex flex-col shadow-sm
+              fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] w-[272px]
+              px-4 py-4 md:block
             "
         >
             <div
                 className="
-                  flex flex-col flex-1 h-full m-2 
-                  rounded-xl bg-white border border-gray-200 shadow-md
+                  panel-shadow flex h-full flex-col rounded-2xl border
+                  border-[var(--color-border-soft)] bg-[var(--color-surface)] p-2
                 "
             >
-                <nav className="flex-1 overflow-y-auto py-4">
+                <nav className="flex-1 space-y-1 overflow-y-auto px-1 py-1">
                     {menuItems.map((item) => renderMenuItem(item))}
                 </nav>
 
-                <div className="border-t border-gray-200 p-4">
-                    <p className="text-sm font-medium text-gray-700 mb-3">Last update</p>
+                <div className="border-t border-[var(--color-border-soft)] px-3 py-4">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-text-primary)]">
+                        Last update
+                    </p>
+
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-5 bg-blue-600 rounded flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">V</span>
+                            <div className="flex h-5 w-8 items-center justify-center rounded bg-[#1434cb]">
+                                <span className="text-[10px] font-bold text-white">V</span>
                             </div>
-                            <span className="text-sm text-gray-600">15 Jun 2025</span>
+                            <span className="text-xs text-[var(--color-text-primary)]">15 Jun 2025</span>
                         </div>
+
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-5 bg-orange-400 rounded flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">M</span>
+                            <div className="flex h-5 w-8 items-center justify-center rounded bg-[#f79e1b]">
+                                <span className="text-[10px] font-bold text-white">M</span>
                             </div>
-                            <span className="text-sm text-gray-600">31 May 2025</span>
+                            <span className="text-xs text-[var(--color-text-primary)]">31 May 2025</span>
                         </div>
+
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-5 bg-red-500 rounded flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">A</span>
+                            <div className="flex h-5 w-8 items-center justify-center rounded bg-[#006fcf]">
+                                <span className="text-[10px] font-bold text-white">A</span>
                             </div>
-                            <span className="text-sm text-gray-600">28 May 2025</span>
+                            <span className="text-xs text-[var(--color-text-primary)]">28 May 2025</span>
                         </div>
                     </div>
                 </div>

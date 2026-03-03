@@ -7,13 +7,10 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
     return (
-        <>
+        <div className="min-h-screen bg-[var(--color-surface-muted)]">
             <Header />
             <Sidebar />
-
-            <div className="flex">
-                <main className="flex-1 p-6 bg-incontrol">{children}</main>
-            </div>
-        </>
+            <main className="min-h-screen px-4 pb-6 pt-24 md:pl-[296px] md:pr-6">{children}</main>
+        </div>
     );
 }
