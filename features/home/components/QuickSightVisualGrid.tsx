@@ -315,7 +315,7 @@ export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
     const getFrameLayout = (card: VisualCard) => {
         switch (card.section) {
             case 'hero':
-                return { height: 280, maxWidth: undefined };
+                return { height: 200, maxWidth: 740 };
             case 'monthly':
                 return { height: 520, maxWidth: 1480 };
             case 'category':
