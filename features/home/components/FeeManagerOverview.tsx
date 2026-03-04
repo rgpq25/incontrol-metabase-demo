@@ -25,7 +25,6 @@ import {
     LayoutGrid,
     MoveHorizontal,
     SlidersHorizontal,
-    X,
 } from 'lucide-react';
 import {
     type CSSProperties,
@@ -129,6 +128,17 @@ export function FeeManagerOverview() {
     const [filters, dispatch] = useReducer(feeManagerFilterReducer, undefined, createInitialFeeManagerFilters);
 
     const quickSightQuery = useMemo(() => buildQuickSightVisualQuery(filters), [filters]);
+    const selectedBrands = useMemo(
+        () => feeManagerBrandOptions.filter((brand) => filters.brands[brand]),
+        [filters.brands]
+    );
+    const appliedFilterLabels = useMemo(() => {
+        return [
+            `Start: ${filters.startDate}`,
+            `End: ${filters.endDate}`,
+            selectedBrands.length > 0 ? `Brand: ${selectedBrands.join(', ')}` : 'Brand: none',
+        ];
+    }, [filters.endDate, filters.startDate, selectedBrands]);
     const {
         layout,
         hasCustomLayout,
@@ -286,13 +296,32 @@ export function FeeManagerOverview() {
                                 <CalendarDays className="h-4 w-4 text-[var(--color-brand-600)]" />
                                 Filter by date
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => dispatch({ type: 'cycleDateRange' })}
-                                className="inline-flex h-10 items-center whitespace-nowrap rounded-xl border border-[var(--color-border-soft)] bg-[var(--color-surface)] px-4 text-sm text-[var(--color-text-primary)]"
-                            >
-                                {filters.dateRangeLabel}
-                            </button>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <label className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-[var(--color-text-muted)]">
+                                    <span>Start</span>
+                                    <input
+                                        type="date"
+                                        value={filters.startDate}
+                                        max={filters.endDate}
+                                        onChange={(event) =>
+                                            dispatch({ type: 'setStartDate', value: event.target.value })
+                                        }
+                                        className="h-10 rounded-xl border border-[var(--color-border-soft)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-300)] focus:outline-none"
+                                    />
+                                </label>
+                                <label className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-[var(--color-text-muted)]">
+                                    <span>End</span>
+                                    <input
+                                        type="date"
+                                        value={filters.endDate}
+                                        min={filters.startDate}
+                                        onChange={(event) =>
+                                            dispatch({ type: 'setEndDate', value: event.target.value })
+                                        }
+                                        className="h-10 rounded-xl border border-[var(--color-border-soft)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-300)] focus:outline-none"
+                                    />
+                                </label>
+                            </div>
                         </div>
                     );
 
@@ -359,24 +388,14 @@ export function FeeManagerOverview() {
     const appliedFiltersContent = (
         <>
             <span className="text-sm font-bold text-[var(--color-text-primary)]">Applied filters:</span>
-
-            {filters.appliedFilters.length > 0 ? (
-                filters.appliedFilters.map((entry) => (
-                    <button
-                        key={entry}
-                        type="button"
-                        onClick={() => dispatch({ type: 'removeAppliedFilter', filter: entry })}
-                        className="inline-flex items-center gap-1 rounded-full border border-[var(--color-brand-300)] bg-[var(--color-brand-100)] px-3 py-1 text-xs text-[var(--color-brand-600)]"
-                    >
-                        {entry}
-                        <X className="h-3 w-3" />
-                    </button>
-                ))
-            ) : (
-                <span className="text-xs text-[var(--color-text-muted)]">
-                    No applied filters. (Visual-only toolbar for now)
+            {appliedFilterLabels.map((entry) => (
+                <span
+                    key={entry}
+                    className="inline-flex items-center rounded-full border border-[var(--color-brand-300)] bg-[var(--color-brand-100)] px-3 py-1 text-xs text-[var(--color-brand-600)]"
+                >
+                    {entry}
                 </span>
-            )}
+            ))}
         </>
     );
 

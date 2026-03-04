@@ -1,7 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildQuickSightVisualQueryString, type QuickSightVisualQuery } from '../config/feeManagerFilters';
+import type {
+    EmbedVisualError,
+    EmbedVisualItem,
+    EmbedVisualUrlsResponse,
+    ExternalFilterContract,
+    ExternalFilterParameter,
+} from '../config/quicksightEmbedContract';
 import {
     GROUPED_HERO_VISUAL_KEYS,
     getQuickSightVisualMeta,
@@ -14,20 +21,11 @@ interface QuickSightVisualGridProps {
     query: QuickSightVisualQuery;
 }
 
-interface VisualEmbedItem {
-    sheetId: string;
-    visualId: string;
-    embedUrl: string;
-}
+const FILTER_REFRESH_DEBOUNCE_MS = 500;
+const SESSION_REFRESH_BUFFER_MS = 60_000;
+const MIN_SESSION_REFRESH_MS = 15_000;
 
-interface VisualEmbedResponse {
-    dashboardId: string;
-    expiresInMinutes: number;
-    visuals: VisualEmbedItem[];
-    errors: string[];
-}
-
-interface VisualCard extends VisualEmbedItem {
+interface VisualCard extends EmbedVisualItem {
     key: QuickSightVisualKey;
     title: string;
     order: number;
@@ -40,21 +38,94 @@ interface VisualCard extends VisualEmbedItem {
     error: string | null;
 }
 
-type VisualFetchResult = { data: VisualEmbedResponse; error: null } | { data: null; error: string };
+type VisualFetchResult =
+    | { data: EmbedVisualUrlsResponse; error: null; aborted: false }
+    | { data: null; error: string; aborted: boolean };
 
 function parseErrorMessage(payload: unknown) {
     if (!payload || typeof payload !== 'object') return null;
 
     const candidate = payload as Record<string, unknown>;
     const error = candidate.error;
+    const detail = candidate.detail;
     const details = candidate.details;
 
+    if (typeof error === 'string' && detail && typeof detail === 'object') {
+        const detailMessage = (detail as Record<string, unknown>).message;
+        if (typeof detailMessage === 'string') return `${error}: ${detailMessage}`;
+    }
     if (typeof error === 'string' && typeof details === 'string') return `${error}: ${details}`;
     if (typeof error === 'string') return error;
     return null;
 }
 
-function normalizePayload(payload: unknown): VisualEmbedResponse | null {
+function normalizeExternalParameter(entry: unknown): ExternalFilterParameter | null {
+    if (!entry || typeof entry !== 'object') return null;
+
+    const candidate = entry as Record<string, unknown>;
+    const name = candidate.Name;
+    const values = candidate.Values;
+    if (typeof name !== 'string' || !Array.isArray(values) || values.some((value) => typeof value !== 'string')) {
+        return null;
+    }
+
+    return {
+        Name: name,
+        Values: values,
+    };
+}
+
+function normalizeExternalFilterContract(payload: unknown): ExternalFilterContract | null {
+    if (!payload || typeof payload !== 'object') return null;
+
+    const candidate = payload as Record<string, unknown>;
+    const scope = candidate.scope;
+    const applyMethod = candidate.applyMethod;
+    const parameters = candidate.parameters;
+    if (scope !== 'global' || applyMethod !== 'quicksight-sdk:setParameters' || !Array.isArray(parameters)) {
+        return null;
+    }
+
+    const normalizedParameters: ExternalFilterParameter[] = [];
+    for (const parameter of parameters) {
+        const normalized = normalizeExternalParameter(parameter);
+        if (!normalized) return null;
+        normalizedParameters.push(normalized);
+    }
+
+    return {
+        scope,
+        applyMethod,
+        parameters: normalizedParameters,
+    };
+}
+
+function normalizeEmbedVisualError(entry: unknown): EmbedVisualError | null {
+    if (!entry || typeof entry !== 'object') return null;
+
+    const candidate = entry as Record<string, unknown>;
+    const sheetId = candidate.sheetId;
+    const visualId = candidate.visualId;
+    const code = candidate.code;
+    const message = candidate.message;
+    if (
+        typeof sheetId !== 'string' ||
+        typeof visualId !== 'string' ||
+        typeof code !== 'string' ||
+        typeof message !== 'string'
+    ) {
+        return null;
+    }
+
+    return {
+        sheetId,
+        visualId,
+        code,
+        message,
+    };
+}
+
+function normalizePayload(payload: unknown): EmbedVisualUrlsResponse | null {
     if (!payload || typeof payload !== 'object') return null;
 
     const candidate = payload as Record<string, unknown>;
@@ -71,7 +142,7 @@ function normalizePayload(payload: unknown): VisualEmbedResponse | null {
         return null;
     }
 
-    const normalizedVisuals: VisualEmbedItem[] = [];
+    const normalizedVisuals: EmbedVisualItem[] = [];
     for (const visual of visuals) {
         if (!visual || typeof visual !== 'object') return null;
         const record = visual as Record<string, unknown>;
@@ -90,20 +161,35 @@ function normalizePayload(payload: unknown): VisualEmbedResponse | null {
         });
     }
 
-    const normalizedErrors =
-        Array.isArray(errors) && errors.every((entry) => typeof entry === 'string')
-            ? (errors as string[])
-            : [];
+    let normalizedErrors: EmbedVisualError[] = [];
+    if (errors !== undefined) {
+        if (!Array.isArray(errors)) return null;
+
+        normalizedErrors = [];
+        for (const entry of errors) {
+            const normalized = normalizeEmbedVisualError(entry);
+            if (!normalized) return null;
+            normalizedErrors.push(normalized);
+        }
+    }
+
+    let externalFilterContract: ExternalFilterContract | undefined;
+    if (candidate.externalFilterContract !== undefined) {
+        const normalizedContract = normalizeExternalFilterContract(candidate.externalFilterContract);
+        if (!normalizedContract) return null;
+        externalFilterContract = normalizedContract;
+    }
 
     return {
         dashboardId,
         expiresInMinutes,
         visuals: normalizedVisuals,
         errors: normalizedErrors,
+        ...(externalFilterContract ? { externalFilterContract } : {}),
     };
 }
 
-function buildVisualCards(visuals: VisualEmbedItem[]): VisualCard[] {
+function buildVisualCards(visuals: EmbedVisualItem[]): VisualCard[] {
     return visuals
         .map((visual, index) => {
             const meta = getQuickSightVisualMeta(visual.sheetId, visual.visualId, index + 1);
@@ -124,11 +210,24 @@ function buildVisualCards(visuals: VisualEmbedItem[]): VisualCard[] {
         .sort((a, b) => a.order - b.order);
 }
 
+function isAbortError(error: unknown): boolean {
+    return error instanceof DOMException && error.name === 'AbortError';
+}
+
+function getSessionRefreshDelayMs(expiresInMinutes: number): number {
+    const ttlMs = expiresInMinutes * 60_000;
+    return Math.max(ttlMs - SESSION_REFRESH_BUFFER_MS, MIN_SESSION_REFRESH_MS);
+}
+
 export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
     const [cards, setCards] = useState<VisualCard[]>([]);
     const [loadingInitial, setLoadingInitial] = useState(true);
     const [globalError, setGlobalError] = useState<string | null>(null);
-    const [warnings, setWarnings] = useState<string[]>([]);
+    const [warnings, setWarnings] = useState<EmbedVisualError[]>([]);
+    const [sessionRefreshAtMs, setSessionRefreshAtMs] = useState<number | null>(null);
+
+    const hasLoadedRef = useRef(false);
+    const sessionExpiresAtRef = useRef<number | null>(null);
 
     const baseQueryString = useMemo(() => buildQuickSightVisualQueryString(query), [query]);
 
@@ -157,8 +256,28 @@ export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
         [cards]
     );
 
+    const trackSessionExpiry = useCallback((expiresInMinutes: number) => {
+        const now = Date.now();
+        sessionExpiresAtRef.current = now + expiresInMinutes * 60_000;
+        setSessionRefreshAtMs(now + getSessionRefreshDelayMs(expiresInMinutes));
+    }, []);
+
+    const applySuccessfulPayload = useCallback(
+        (payload: EmbedVisualUrlsResponse) => {
+            setCards(buildVisualCards(payload.visuals));
+            setWarnings(payload.errors);
+            setGlobalError(null);
+            trackSessionExpiry(payload.expiresInMinutes);
+        },
+        [trackSessionExpiry]
+    );
+
     const fetchVisualPayload = useCallback(
-        async (params?: { sheetId?: string; visualId?: string }): Promise<VisualFetchResult> => {
+        async (params?: {
+            sheetId?: string;
+            visualId?: string;
+            signal?: AbortSignal;
+        }): Promise<VisualFetchResult> => {
             const queryParams = new URLSearchParams(baseQueryString);
             if (params?.sheetId) queryParams.set('sheetId', params.sheetId);
             if (params?.visualId) queryParams.set('visualId', params.visualId);
@@ -168,6 +287,7 @@ export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
                     method: 'GET',
                     cache: 'no-store',
                     headers: { Accept: 'application/json' },
+                    signal: params?.signal,
                 });
 
                 let jsonPayload: unknown = null;
@@ -179,42 +299,83 @@ export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
 
                 if (!response.ok) {
                     const message = parseErrorMessage(jsonPayload);
-                    return { data: null, error: message ?? 'Unable to load QuickSight visual URLs.' };
+                    return {
+                        data: null,
+                        error: message ?? 'Unable to load QuickSight visual URLs.',
+                        aborted: false,
+                    };
                 }
 
                 const normalizedPayload = normalizePayload(jsonPayload);
                 if (!normalizedPayload) {
-                    return { data: null, error: 'QuickSight visual payload has an invalid format.' };
+                    return {
+                        data: null,
+                        error: 'QuickSight visual payload has an invalid format.',
+                        aborted: false,
+                    };
                 }
 
-                return { data: normalizedPayload, error: null };
-            } catch {
-                return { data: null, error: 'Network error while loading QuickSight visual URLs.' };
+                return { data: normalizedPayload, error: null, aborted: false };
+            } catch (error) {
+                if (isAbortError(error)) return { data: null, error: 'Request aborted.', aborted: true };
+
+                return {
+                    data: null,
+                    error: 'Network error while loading QuickSight visual URLs.',
+                    aborted: false,
+                };
             }
         },
         [baseQueryString]
     );
 
+    const loadAllVisuals = useCallback(
+        async ({
+            showInitialLoader = false,
+            preserveCardsOnError = true,
+            signal,
+        }: {
+            showInitialLoader?: boolean;
+            preserveCardsOnError?: boolean;
+            signal?: AbortSignal;
+        } = {}) => {
+            if (showInitialLoader) setLoadingInitial(true);
+            setGlobalError(null);
+
+            const result = await fetchVisualPayload({ signal });
+            if (result.aborted) {
+                if (showInitialLoader) setLoadingInitial(false);
+                return false;
+            }
+
+            if (!result.data) {
+                if (!preserveCardsOnError) setCards([]);
+                setWarnings([]);
+                setGlobalError(result.error);
+                if (showInitialLoader) setLoadingInitial(false);
+                return false;
+            }
+
+            applySuccessfulPayload(result.data);
+            if (showInitialLoader) setLoadingInitial(false);
+            return true;
+        },
+        [applySuccessfulPayload, fetchVisualPayload]
+    );
+
     const reloadAllVisuals = useCallback(async () => {
-        setLoadingInitial(true);
-        setGlobalError(null);
-        setWarnings([]);
-
-        const result = await fetchVisualPayload();
-        if (!result.data) {
-            setCards([]);
-            setGlobalError(result.error);
-            setLoadingInitial(false);
-            return;
-        }
-
-        setCards(buildVisualCards(result.data.visuals));
-        setWarnings(result.data.errors);
-        setLoadingInitial(false);
-    }, [fetchVisualPayload]);
+        await loadAllVisuals({ showInitialLoader: true, preserveCardsOnError: false });
+    }, [loadAllVisuals]);
 
     const retryCard = useCallback(
         async (sheetId: string, visualId: string) => {
+            const sessionExpired =
+                sessionExpiresAtRef.current !== null && Date.now() >= sessionExpiresAtRef.current;
+            if (sessionExpired) {
+                await loadAllVisuals({ showInitialLoader: false, preserveCardsOnError: true });
+                return;
+            }
+
             const targetKey = toVisualKey(sheetId, visualId);
             setCards((previous) =>
                 previous.map((card) =>
@@ -222,23 +383,25 @@ export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
                 )
             );
 
-            let refreshedVisual: VisualEmbedItem | null = null;
+            let refreshedVisual: EmbedVisualItem | null = null;
             let errorMessage: string | null = null;
 
             const singleResult = await fetchVisualPayload({ sheetId, visualId });
-            if (singleResult.data) {
+            if (!singleResult.aborted && singleResult.data) {
                 refreshedVisual =
                     singleResult.data.visuals.find(
                         (entry) => entry.sheetId === sheetId && entry.visualId === visualId
                     ) ?? null;
                 if (!refreshedVisual) errorMessage = 'Requested visual was not returned by single refresh.';
-            } else {
+                setWarnings(singleResult.data.errors);
+                trackSessionExpiry(singleResult.data.expiresInMinutes);
+            } else if (!singleResult.aborted) {
                 errorMessage = singleResult.error;
             }
 
             if (!refreshedVisual) {
                 const batchResult = await fetchVisualPayload();
-                if (batchResult.data) {
+                if (!batchResult.aborted && batchResult.data) {
                     refreshedVisual =
                         batchResult.data.visuals.find(
                             (entry) => entry.sheetId === sheetId && entry.visualId === visualId
@@ -248,7 +411,8 @@ export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
                     } else {
                         setWarnings(batchResult.data.errors);
                     }
-                } else {
+                    trackSessionExpiry(batchResult.data.expiresInMinutes);
+                } else if (!batchResult.aborted) {
                     errorMessage = batchResult.error;
                 }
             }
@@ -281,36 +445,48 @@ export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
                 )
             );
         },
-        [fetchVisualPayload]
+        [fetchVisualPayload, loadAllVisuals, trackSessionExpiry]
     );
 
     useEffect(() => {
-        let active = true;
+        const abortController = new AbortController();
+        const isInitialLoad = !hasLoadedRef.current;
+        const delay = isInitialLoad ? 0 : FILTER_REFRESH_DEBOUNCE_MS;
 
-        async function bootstrapVisuals() {
-            const result = await fetchVisualPayload();
-            if (!active) return;
-
-            if (!result.data) {
-                setCards([]);
-                setGlobalError(result.error);
-                setWarnings([]);
-                setLoadingInitial(false);
-                return;
-            }
-
-            setCards(buildVisualCards(result.data.visuals));
-            setWarnings(result.data.errors);
-            setGlobalError(null);
-            setLoadingInitial(false);
-        }
-
-        void bootstrapVisuals();
+        const timerId = window.setTimeout(() => {
+            void loadAllVisuals({
+                showInitialLoader: isInitialLoad,
+                preserveCardsOnError: !isInitialLoad,
+                signal: abortController.signal,
+            }).then((succeeded) => {
+                if (succeeded) hasLoadedRef.current = true;
+            });
+        }, delay);
 
         return () => {
-            active = false;
+            abortController.abort();
+            window.clearTimeout(timerId);
         };
-    }, [fetchVisualPayload]);
+    }, [baseQueryString, loadAllVisuals]);
+
+    useEffect(() => {
+        if (sessionRefreshAtMs === null || !hasLoadedRef.current) return;
+
+        const abortController = new AbortController();
+        const delay = Math.max(0, sessionRefreshAtMs - Date.now());
+        const timerId = window.setTimeout(() => {
+            void loadAllVisuals({
+                showInitialLoader: false,
+                preserveCardsOnError: true,
+                signal: abortController.signal,
+            });
+        }, delay);
+
+        return () => {
+            abortController.abort();
+            window.clearTimeout(timerId);
+        };
+    }, [loadAllVisuals, sessionRefreshAtMs]);
 
     const getFrameLayout = (card: VisualCard) => {
         switch (card.section) {
@@ -440,9 +616,17 @@ export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
 
     return (
         <section className="mx-auto w-full max-w-[1560px] space-y-4">
+            {globalError && cards.length > 0 && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-900">
+                    Refresh failed. Showing the latest loaded visuals. {globalError}
+                </div>
+            )}
+
             {warnings.length > 0 && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-                    Some visuals could not be generated by QuickSight and may be missing from this view.
+                    {warnings.length === 1
+                        ? '1 visual could not be generated by QuickSight and may be missing from this view.'
+                        : `${warnings.length} visuals could not be generated by QuickSight and may be missing from this view.`}
                 </div>
             )}
 

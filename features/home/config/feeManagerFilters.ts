@@ -2,20 +2,22 @@ export type FeeManagerBrand = 'Visa' | 'Mastercard' | 'Amex';
 
 export interface FeeManagerFilterState {
     groupViewLabel: 'Group View';
-    dateRangeLabel: string;
+    startDate: string;
+    endDate: string;
     brands: Record<FeeManagerBrand, boolean>;
     business: string;
-    appliedFilters: string[];
 }
 
 export type FeeManagerFilterAction =
-    | { type: 'cycleDateRange' }
+    | { type: 'setStartDate'; value: string }
+    | { type: 'setEndDate'; value: string }
     | { type: 'toggleBrand'; brand: FeeManagerBrand }
-    | { type: 'setBusiness'; business: string }
-    | { type: 'removeAppliedFilter'; filter: string };
+    | { type: 'setBusiness'; business: string };
 
-const DATE_RANGE_PRESETS = ['20 May, 2024 - 20 May, 2025', '01 Jan, 2025 - 31 Jan, 2026'] as const;
 const DEFAULT_DASHBOARD_ID = '4ecd3350-2b80-4ac1-b1da-8819819f5f2f';
+const DEFAULT_START_DATE = '2023-01-01';
+const DEFAULT_END_DATE = '2023-01-31';
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export const feeManagerBrandOptions: FeeManagerBrand[] = ['Visa', 'Mastercard', 'Amex'];
 
@@ -29,15 +31,28 @@ export const feeManagerBusinessOptions = [
 export function createInitialFeeManagerFilters(): FeeManagerFilterState {
     return {
         groupViewLabel: 'Group View',
-        dateRangeLabel: DATE_RANGE_PRESETS[0],
+        startDate: DEFAULT_START_DATE,
+        endDate: DEFAULT_END_DATE,
         brands: {
             Visa: true,
             Mastercard: true,
             Amex: true,
         },
         business: 'All Businesses',
-        appliedFilters: ['Europa SEPA', 'Europa Non-SEPA', 'America'],
     };
+}
+
+function isIsoDate(value: string): boolean {
+    if (!ISO_DATE_PATTERN.test(value)) return false;
+
+    const parsed = new Date(`${value}T00:00:00Z`);
+    if (Number.isNaN(parsed.getTime())) return false;
+    return parsed.toISOString().slice(0, 10) === value;
+}
+
+function normalizeDateValue(candidate: string, fallback: string): string {
+    const trimmed = candidate.trim();
+    return isIsoDate(trimmed) ? trimmed : fallback;
 }
 
 export function feeManagerFilterReducer(
@@ -45,15 +60,24 @@ export function feeManagerFilterReducer(
     action: FeeManagerFilterAction
 ): FeeManagerFilterState {
     switch (action.type) {
-        case 'cycleDateRange': {
-            const currentIndex = DATE_RANGE_PRESETS.indexOf(
-                state.dateRangeLabel as (typeof DATE_RANGE_PRESETS)[number]
-            );
-            const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % DATE_RANGE_PRESETS.length : 0;
+        case 'setStartDate': {
+            const startDate = normalizeDateValue(action.value, state.startDate);
+            const endDate = startDate > state.endDate ? startDate : state.endDate;
 
             return {
                 ...state,
-                dateRangeLabel: DATE_RANGE_PRESETS[nextIndex],
+                startDate,
+                endDate,
+            };
+        }
+        case 'setEndDate': {
+            const endDate = normalizeDateValue(action.value, state.endDate);
+            const startDate = endDate < state.startDate ? endDate : state.startDate;
+
+            return {
+                ...state,
+                startDate,
+                endDate,
             };
         }
         case 'toggleBrand':
@@ -69,33 +93,40 @@ export function feeManagerFilterReducer(
                 ...state,
                 business: action.business,
             };
-        case 'removeAppliedFilter':
-            return {
-                ...state,
-                appliedFilters: state.appliedFilters.filter((entry) => entry !== action.filter),
-            };
         default:
             return state;
     }
 }
 
+export type QuickSightParameterValue = string | string[];
+
 export interface QuickSightVisualQuery {
     dashboardId: string;
-    // Future-ready extension points:
-    // dateRange?: { from: string; to: string };
-    // brands?: FeeManagerBrand[];
-    // business?: string;
+    parameters: Record<string, QuickSightParameterValue>;
+}
+
+function getSelectedBrands(filters: FeeManagerFilterState): FeeManagerBrand[] {
+    return feeManagerBrandOptions.filter((brand) => filters.brands[brand]);
 }
 
 export function buildQuickSightVisualQuery(filters: FeeManagerFilterState): QuickSightVisualQuery {
-    void filters;
+    const selectedBrands = getSelectedBrands(filters);
+    const parameters: Record<string, QuickSightParameterValue> = {
+        StartDate: filters.startDate,
+        EndDate: filters.endDate,
+    };
+
+    if (selectedBrands.length > 0) parameters.Brand = selectedBrands;
+
     return {
         dashboardId: DEFAULT_DASHBOARD_ID,
+        parameters,
     };
 }
 
 export function buildQuickSightVisualQueryString(query: QuickSightVisualQuery): string {
     const params = new URLSearchParams();
     params.set('dashboardId', query.dashboardId);
+    params.set('parameters', JSON.stringify(query.parameters));
     return params.toString();
 }
