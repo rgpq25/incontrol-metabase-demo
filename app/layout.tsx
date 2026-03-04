@@ -1,13 +1,17 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { MetabaseAuthProvider } from '@/features/dashboard/context/MetabaseAuthContext';
+import { Lato } from 'next/font/google';
 import './globals.css';
 
+const lato = Lato({
+    subsets: ['latin'],
+    weight: ['400', '700'],
+    variable: '--font-lato',
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
-    title: 'Incontrol Metabase Demo',
-    description: 'Incontrol Metabase Demo',
+    title: 'Incontrol Demo',
+    description: 'Incontrol internal dashboard',
 };
 
 export default function RootLayout({
@@ -17,11 +21,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body >
-                    <MetabaseAuthProvider>
-                        {children}
-                    </MetabaseAuthProvider>
-                </body>
+            <body className={`${lato.variable} font-[var(--font-lato)] antialiased`}>{children}</body>
         </html>
     );
 }
