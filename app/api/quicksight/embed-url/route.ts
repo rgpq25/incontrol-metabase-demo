@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const DEFAULT_DASHBOARD_ID = '74f4df53-cee7-4a93-a268-41fd0495b9d2';
+const DEFAULT_DASHBOARD_ID = '4ecd3350-2b80-4ac1-b1da-8819819f5f2f';
 const QUICK_SIGHT_EMBED_ENDPOINT =
     'https://3had8hcyhg.execute-api.eu-south-2.amazonaws.com/embed-url';
 

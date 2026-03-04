@@ -20,14 +20,14 @@ export interface QuickSightVisualMeta {
 
 const DEFAULT_MIN_HEIGHT = 360;
 
-const SHEET_ID = '74f4df53-cee7-4a93-a268-41fd0495b9d2_0b05ba09-806d-4a93-9834-e82bb5e3c475';
+const SHEET_ID = '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_0b05ba09-806d-4a93-9834-e82bb5e3c475';
 
 export function toVisualKey(sheetId: string, visualId: string): QuickSightVisualKey {
     return `${sheetId}:${visualId}`;
 }
 
 export const quickSightVisualMeta: Record<QuickSightVisualKey, QuickSightVisualMeta> = {
-    [toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_5881346a-b982-485d-91c1-d7ff0c133d63')]:
+    [toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_5881346a-b982-485d-91c1-d7ff0c133d63')]:
         {
             title: 'Total',
             order: 4,
@@ -37,7 +37,7 @@ export const quickSightVisualMeta: Record<QuickSightVisualKey, QuickSightVisualM
             desktopSpan: 1,
             heroHighlight: true,
         },
-    [toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_f82d4b33-8ed1-4940-ad97-881e1d04b6ab')]:
+    [toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_f82d4b33-8ed1-4940-ad97-881e1d04b6ab')]:
         {
             title: 'Acquirer Cash',
             order: 3,
@@ -46,7 +46,7 @@ export const quickSightVisualMeta: Record<QuickSightVisualKey, QuickSightVisualM
             section: 'hero',
             desktopSpan: 1,
         },
-    [toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_9f023952-2c3a-4f50-8c9e-67e9d0d98473')]:
+    [toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_9f023952-2c3a-4f50-8c9e-67e9d0d98473')]:
         {
             title: 'Acquirer Merchant',
             order: 2,
@@ -55,7 +55,7 @@ export const quickSightVisualMeta: Record<QuickSightVisualKey, QuickSightVisualM
             section: 'hero',
             desktopSpan: 1,
         },
-    [toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_9fe19a65-bd9b-42e8-9093-9a3fa47a6790')]:
+    [toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_9fe19a65-bd9b-42e8-9093-9a3fa47a6790')]:
         {
             title: 'Gross Fees by Category',
             order: 5,
@@ -64,7 +64,7 @@ export const quickSightVisualMeta: Record<QuickSightVisualKey, QuickSightVisualM
             section: 'category',
             desktopSpan: 1,
         },
-    [toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_755f2714-d085-4bf0-9d3a-31c44ec4f490')]:
+    [toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_755f2714-d085-4bf0-9d3a-31c44ec4f490')]:
         {
             title: 'Gross Fees by Jurisdiction',
             order: 6,
@@ -73,7 +73,7 @@ export const quickSightVisualMeta: Record<QuickSightVisualKey, QuickSightVisualM
             section: 'jurisdiction',
             desktopSpan: 1,
         },
-    [toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_9d672775-56a9-4fa3-a119-881a68c7d70a')]:
+    [toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_9d672775-56a9-4fa3-a119-881a68c7d70a')]:
         {
             title: 'Monthly gross Fees',
             order: 8,
@@ -82,7 +82,7 @@ export const quickSightVisualMeta: Record<QuickSightVisualKey, QuickSightVisualM
             section: 'monthly',
             desktopSpan: 2,
         },
-    [toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_47080a60-f743-44d2-adde-3a553918e5e2')]:
+    [toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_47080a60-f743-44d2-adde-3a553918e5e2')]:
         {
             title: 'Issuer',
             order: 1,
@@ -91,7 +91,7 @@ export const quickSightVisualMeta: Record<QuickSightVisualKey, QuickSightVisualM
             section: 'hero',
             desktopSpan: 1,
         },
-    [toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_b43463a2-57a6-4292-a225-f36a3b5b657b')]:
+    [toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_b43463a2-57a6-4292-a225-f36a3b5b657b')]:
         {
             title: 'Gross Fees by Evolution',
             order: 7,
@@ -103,10 +103,10 @@ export const quickSightVisualMeta: Record<QuickSightVisualKey, QuickSightVisualM
 };
 
 export const GROUPED_HERO_VISUAL_KEYS: QuickSightVisualKey[] = [
-    toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_47080a60-f743-44d2-adde-3a553918e5e2'),
-    toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_9f023952-2c3a-4f50-8c9e-67e9d0d98473'),
-    toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_f82d4b33-8ed1-4940-ad97-881e1d04b6ab'),
-    toVisualKey(SHEET_ID, '74f4df53-cee7-4a93-a268-41fd0495b9d2_5881346a-b982-485d-91c1-d7ff0c133d63'),
+    toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_47080a60-f743-44d2-adde-3a553918e5e2'),
+    toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_9f023952-2c3a-4f50-8c9e-67e9d0d98473'),
+    toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_f82d4b33-8ed1-4940-ad97-881e1d04b6ab'),
+    toVisualKey(SHEET_ID, '4ecd3350-2b80-4ac1-b1da-8819819f5f2f_5881346a-b982-485d-91c1-d7ff0c133d63'),
 ];
 
 const groupedHeroVisualKeySet = new Set<QuickSightVisualKey>(GROUPED_HERO_VISUAL_KEYS);

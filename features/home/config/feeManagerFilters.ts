@@ -15,7 +15,7 @@ export type FeeManagerFilterAction =
     | { type: 'removeAppliedFilter'; filter: string };
 
 const DATE_RANGE_PRESETS = ['20 May, 2024 - 20 May, 2025', '01 Jan, 2025 - 31 Jan, 2026'] as const;
-const DEFAULT_DASHBOARD_ID = '74f4df53-cee7-4a93-a268-41fd0495b9d2';
+const DEFAULT_DASHBOARD_ID = '4ecd3350-2b80-4ac1-b1da-8819819f5f2f';
 
 export const feeManagerBrandOptions: FeeManagerBrand[] = ['Visa', 'Mastercard', 'Amex'];
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-const DASHBOARD_ID = '74f4df53-cee7-4a93-a268-41fd0495b9d2';
+const DASHBOARD_ID = '4ecd3350-2b80-4ac1-b1da-8819819f5f2f';
 
 interface EmbedPayload {
     embedUrl: string;
