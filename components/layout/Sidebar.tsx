@@ -28,7 +28,7 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-    { icon: LayoutDashboard, label: 'Fee Dashboard', href: '/' },
+    { icon: LayoutDashboard, label: 'Fee Dashboard', href: '/fee-dashboard' },
     { icon: FileText, label: 'Incontrol Panel', blocked: true },
     { icon: BookOpen, label: 'Fee Library', href: '/collections' },
     { icon: BarChart3, label: 'Analytics & Reports', blocked: true },

@@ -40,7 +40,7 @@ export default function LoginForm() {
                 return;
             }
 
-            router.push('/');
+            router.push('/collections');
             router.refresh();
         } catch (err) {
             setError('Server error. Please try again later.');

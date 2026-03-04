@@ -1,10 +1,6 @@
-import { MainLayout } from '@/components/layout/MainLayout';
-import { FeeManagerOverview } from '@/features/home/components/FeeManagerOverview';
+import { redirect } from 'next/navigation';
 
 export default function HomePage() {
-    return (
-        <MainLayout>
-            <FeeManagerOverview />
-        </MainLayout>
-    );
+    // Auth is enforced in middleware; root is just an entrypoint.
+    redirect('/collections');
 }
