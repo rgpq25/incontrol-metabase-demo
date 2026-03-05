@@ -62,6 +62,7 @@ export function Header() {
     const userInitials = session?.user
         ? `${session.user.firstName?.[0] ?? ''}${session.user.lastName?.[0] ?? ''}`.toUpperCase()
         : '';
+    const isCollectionsRoute = pathname.startsWith('/collections') || pathname.startsWith('/fee-library');
 
     return (
         <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--color-border-soft)] bg-[var(--color-surface-muted)]">
@@ -105,7 +106,7 @@ export function Header() {
                         <Link
                             href="/collections"
                             className={`${shellButtonClass} ${
-                                pathname.startsWith('/collections')
+                                isCollectionsRoute
                                     ? 'border-[var(--color-brand-600)] bg-[var(--color-surface)] text-[var(--color-brand-600)]'
                                     : 'border-transparent bg-[var(--color-surface-muted)] text-[var(--color-text-primary)] hover:border-[var(--color-border-soft)] hover:bg-[var(--color-surface)]'
                             }`}

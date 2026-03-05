@@ -1,21 +1,22 @@
+import Image from 'next/image';
+import Link from 'next/link';
+
 const collections = [
     {
-        name: 'Card Processing Fees',
-        owner: 'Operations',
-        updatedAt: '2 hours ago',
-        status: 'In Review',
+        name: 'Scheme Billing and Operational Performance Overview',
+        description: 'Control your scheme fee billing by being ahead, watch how your money is being spent.',
+        href: '/fee-dashboard',
+        imageSrc: '/images/logo.png',
+        imageAlt: 'Fee dashboard preview',
+        badge: 'Current',
     },
     {
-        name: 'ACH Network Costs',
-        owner: 'Finance',
-        updatedAt: 'Yesterday',
-        status: 'Approved',
-    },
-    {
-        name: 'Merchant Service Adjustments',
-        owner: 'Revenue Ops',
-        updatedAt: '3 days ago',
-        status: 'Draft',
+        name: 'Scheme Fees Library',
+        description: 'Open the full Fee Library, detailing every scheme fee scoped.',
+        href: '/fee-library',
+        imageSrc: '/images/logo.png',
+        imageAlt: 'Fee library preview',
+        badge: 'New',
     },
 ];
 
@@ -23,43 +24,40 @@ export function CollectionsOverview() {
     return (
         <div className="space-y-6">
             <section className="panel-shadow rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-surface)] p-6">
-                <h1 className="text-2xl font-bold text-[var(--color-brand-600)]">Fee Library</h1>
+                <h1 className="text-2xl font-bold text-[var(--color-brand-600)]">Collections</h1>
                 <p className="mt-2 text-sm text-[var(--color-text-primary)]">
-                    Route-based collections view that keeps the shared app shell and navigation.
+                    {/* Choose a collection destination. */}
                 </p>
             </section>
 
-            <section className="rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-surface)]">
-                <div className="border-b border-[var(--color-border-soft)] px-6 py-4">
-                    <h2 className="text-lg font-bold text-[var(--color-brand-600)]">Saved Collections</h2>
-                </div>
+            <section className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
+                {collections.map((collection) => (
+                    <Link
+                        key={collection.name}
+                        href={collection.href}
+                        className="panel-shadow mx-auto w-full max-w-[360px] overflow-hidden rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-surface)] transition-colors hover:border-[var(--color-brand-300)]"
+                    >
+                        <div className="relative h-40 bg-gradient-to-br from-[var(--color-brand-100)] to-[#dce7ff]">
+                            <Image
+                                src={collection.imageSrc}
+                                alt={collection.imageAlt}
+                                fill
+                                sizes="(max-width: 768px) 100vw, 360px"
+                                className="object-contain p-8 opacity-75"
+                            />
+                            <span className="absolute left-3 top-3 rounded-full bg-[var(--color-surface)] px-2.5 py-1 text-xs font-bold text-[var(--color-brand-600)]">
+                                {collection.badge}
+                            </span>
+                        </div>
 
-                <div className="divide-y divide-[var(--color-border-soft)]">
-                    {collections.map((collection) => (
-                        <article key={collection.name} className="px-6 py-4">
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <h3 className="font-bold text-[var(--color-text-primary)]">{collection.name}</h3>
-                                    <p className="text-sm text-[var(--color-text-primary)]">Owner: {collection.owner}</p>
-                                </div>
-                                <div className="text-sm text-[var(--color-text-primary)]">
-                                    <p
-                                        className={
-                                            collection.status === 'Approved'
-                                                ? 'text-green-700'
-                                                : collection.status === 'In Review'
-                                                  ? 'text-[var(--color-brand-600)]'
-                                                  : 'text-[var(--color-text-muted)]'
-                                        }
-                                    >
-                                        Status: {collection.status}
-                                    </p>
-                                    <p>Updated: {collection.updatedAt}</p>
-                                </div>
-                            </div>
-                        </article>
-                    ))}
-                </div>
+                        <div className="p-5">
+                            <h2 className="text-base font-bold leading-tight text-[var(--color-brand-600)]">
+                                {collection.name}
+                            </h2>
+                            <p className="mt-2 text-sm text-[var(--color-text-primary)]">{collection.description}</p>
+                        </div>
+                    </Link>
+                ))}
             </section>
         </div>
     );
