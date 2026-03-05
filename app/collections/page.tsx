@@ -1,10 +1,6 @@
-import { MainLayout } from '@/components/layout/MainLayout';
-import { CollectionsOverview } from '@/features/collections/components/CollectionsOverview';
+import { redirect } from 'next/navigation';
+import { DASHBOARD_HOME_PATH } from '@/features/dashboards/config/availableDashboards';
 
 export default function CollectionsPage() {
-    return (
-        <MainLayout>
-            <CollectionsOverview />
-        </MainLayout>
-    );
+    redirect(DASHBOARD_HOME_PATH);
 }

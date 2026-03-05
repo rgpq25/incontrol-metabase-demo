@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       );
     }
 
-    // Read optional 'as' param to allow using an alternate account for collections
+    // Read optional 'as' param to allow using an alternate account for dashboards
     let asParam: string | null = null;
     try {
       const url = new URL(request.url);
