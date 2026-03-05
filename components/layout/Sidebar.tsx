@@ -3,7 +3,6 @@
 import {
     BarChart3,
     Book,
-    BookOpen,
     CheckCircle,
     ChevronDown,
     ChevronRight,
@@ -18,6 +17,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { DASHBOARD_HOME_PATH, availableDashboards } from '@/features/dashboards/config/availableDashboards';
 
 interface MenuItem {
     icon: LucideIcon;
@@ -28,13 +28,22 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-    { icon: LayoutDashboard, label: 'Fee Dashboard', href: '/fee-dashboard' },
+    {
+        icon: LayoutDashboard,
+        label: 'Dashboards',
+        href: DASHBOARD_HOME_PATH,
+        children: availableDashboards.map((dashboard) => ({
+            icon: LayoutDashboard,
+            label: dashboard.sidebarLabel ?? dashboard.name,
+            href: dashboard.href,
+        })),
+    },
     { icon: FileText, label: 'Incontrol Panel', blocked: true },
-    { icon: BookOpen, label: 'Fee Library', href: '/collections' },
     { icon: BarChart3, label: 'Analytics & Reports', blocked: true },
     {
         icon: PiggyBank,
         label: 'Saving Opportunities',
+        href: '/saving-opportunities',
         children: [
             { icon: ShieldCheck, label: 'Data integrity', blocked: true },
             { icon: CheckCircle, label: 'Visa Mar', blocked: true },
@@ -51,6 +60,16 @@ export function Sidebar() {
     const pathname = usePathname();
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
+    const isItemActive = (item: MenuItem): boolean => {
+        const isCurrentItemActive = item.href
+            ? item.href === '/'
+                ? pathname === '/'
+                : pathname.startsWith(item.href)
+            : false;
+        const isAnyChildActive = item.children?.some((child) => isItemActive(child)) ?? false;
+        return isCurrentItemActive || isAnyChildActive;
+    };
+
     const toggleExpand = (item: MenuItem) => {
         if (!item.children || item.blocked) return;
 
@@ -61,13 +80,9 @@ export function Sidebar() {
 
     const renderMenuItem = (item: MenuItem, level = 0) => {
         const hasChildren = Boolean(item.children?.length);
+        const isActive = isItemActive(item);
         const isExpanded = expandedItems.includes(item.label);
         const isBlocked = item.blocked;
-        const isActive = item.href
-            ? item.href === '/'
-                ? pathname === '/'
-                : pathname.startsWith(item.href)
-            : false;
         const Icon = item.icon;
         const iconSize = level === 0 ? 16 : 14;
 
@@ -85,19 +100,32 @@ export function Sidebar() {
 
         return (
             <div key={item.label}>
-                {item.href && !isBlocked ? (
+                {item.href && hasChildren && !isBlocked ? (
+                    <div className={className}>
+                        <Link href={item.href} className="flex min-w-0 flex-1 items-center gap-2">
+                            <span className="shrink-0 text-[var(--color-brand-600)]">
+                                <Icon size={iconSize} />
+                            </span>
+
+                            <span className="flex-1">{item.label}</span>
+                        </Link>
+
+                        <button
+                            type="button"
+                            onClick={() => toggleExpand(item)}
+                            className="mr-1 rounded p-0.5 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)]"
+                            aria-label={isExpanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
+                        >
+                            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </button>
+                    </div>
+                ) : item.href && !isBlocked ? (
                     <Link href={item.href} className={className}>
                         <span className="shrink-0 text-[var(--color-brand-600)]">
                             <Icon size={iconSize} />
                         </span>
 
                         <span className="flex-1">{item.label}</span>
-
-                        {hasChildren && (
-                            <span className="mr-1 text-[var(--color-text-muted)]">
-                                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                            </span>
-                        )}
                     </Link>
                 ) : (
                     <button

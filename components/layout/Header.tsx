@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { DASHBOARD_HOME_PATH, isDashboardRoute } from '@/features/dashboards/config/availableDashboards';
 
 type SessionState = {
     authenticated: boolean;
@@ -62,6 +63,7 @@ export function Header() {
     const userInitials = session?.user
         ? `${session.user.firstName?.[0] ?? ''}${session.user.lastName?.[0] ?? ''}`.toUpperCase()
         : '';
+    const isDashboardsRoute = isDashboardRoute(pathname);
 
     return (
         <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--color-border-soft)] bg-[var(--color-surface-muted)]">
@@ -103,14 +105,14 @@ export function Header() {
                         })}
 
                         <Link
-                            href="/collections"
+                            href={DASHBOARD_HOME_PATH}
                             className={`${shellButtonClass} ${
-                                pathname.startsWith('/collections')
+                                isDashboardsRoute
                                     ? 'border-[var(--color-brand-600)] bg-[var(--color-surface)] text-[var(--color-brand-600)]'
                                     : 'border-transparent bg-[var(--color-surface-muted)] text-[var(--color-text-primary)] hover:border-[var(--color-border-soft)] hover:bg-[var(--color-surface)]'
                             }`}
                         >
-                            Collections
+                            Dashboards
                         </Link>
                     </nav>
                 </div>

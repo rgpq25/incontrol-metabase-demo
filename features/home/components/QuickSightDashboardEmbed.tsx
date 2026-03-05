@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-const DASHBOARD_ID = '4ecd3350-2b80-4ac1-b1da-8819819f5f2f';
+const DEFAULT_DASHBOARD_ID = '4ecd3350-2b80-4ac1-b1da-8819819f5f2f';
+
+interface QuickSightDashboardEmbedProps {
+    dashboardId?: string;
+}
 
 interface EmbedPayload {
     embedUrl: string;
@@ -22,7 +26,7 @@ function parseErrorMessage(payload: unknown) {
     return null;
 }
 
-export function QuickSightDashboardEmbed() {
+export function QuickSightDashboardEmbed({ dashboardId = DEFAULT_DASHBOARD_ID }: QuickSightDashboardEmbedProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [payload, setPayload] = useState<EmbedPayload | null>(null);
@@ -33,11 +37,12 @@ export function QuickSightDashboardEmbed() {
 
         try {
             const response = await fetch(
-                `/api/quicksight/embed-url?dashboardId=${encodeURIComponent(DASHBOARD_ID)}`,
+                `/api/quicksight/embed-url?dashboardId=${encodeURIComponent(dashboardId)}`,
                 {
                     method: 'GET',
                     cache: 'no-store',
                     headers: { Accept: 'application/json' },
+                    credentials: 'include',
                 }
             );
 
@@ -83,7 +88,7 @@ export function QuickSightDashboardEmbed() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [dashboardId]);
 
     useEffect(() => {
         void fetchEmbedUrl();

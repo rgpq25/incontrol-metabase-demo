@@ -1,9 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { DASHBOARD_HOME_PATH } from '@/features/dashboards/config/availableDashboards';
 import { users } from '@/lib/users';
 
 const LOGIN_PATH = '/login';
-const DEFAULT_AUTHENTICATED_PATH = '/collections';
+const DEFAULT_AUTHENTICATED_PATH = DASHBOARD_HOME_PATH;
 
 function hasValidSession(request: NextRequest): boolean {
     const sessionUserId = Number(request.cookies.get('session_user_id')?.value ?? '');

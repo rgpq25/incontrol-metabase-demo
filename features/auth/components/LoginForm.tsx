@@ -5,6 +5,7 @@ import { AlertCircle, Eye, EyeOff, X } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { DASHBOARD_HOME_PATH } from '@/features/dashboards/config/availableDashboards';
 
 export default function LoginForm() {
     const router = useRouter();
@@ -40,7 +41,7 @@ export default function LoginForm() {
                 return;
             }
 
-            router.push('/collections');
+            router.push(DASHBOARD_HOME_PATH);
             router.refresh();
         } catch (err) {
             setError('Server error. Please try again later.');
