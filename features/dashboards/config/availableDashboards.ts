@@ -20,7 +20,7 @@ export const availableDashboards: AvailableDashboard[] = [
         href: '/fee-dashboard',
         imageSrc: '/images/logo.png',
         imageAlt: 'Fee dashboard preview',
-        badge: 'Current',
+        badge: 'Standard',
     },
     {
         id: 'scheme-fees-library',
@@ -30,7 +30,7 @@ export const availableDashboards: AvailableDashboard[] = [
         href: '/fee-library',
         imageSrc: '/images/logo.png',
         imageAlt: 'Fee library preview',
-        badge: 'New',
+        badge: 'Custom',
     },
 ];
 
