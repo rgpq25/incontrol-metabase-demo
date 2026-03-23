@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-03-10T16:26:10.578Z",
+  "deckPath": "C:\\Workspace\\incontrol-metabase-demo\\output\\pdf\\app-pages-screenshot-deck.pdf",
+  "pageCount": 5,
+  "images": [
+    {
+      "title": "Login",
+      "route": "/login",
+      "imagePath": "C:\\Workspace\\incontrol-metabase-demo\\output\\screenshots\\app-pages\\login.png",
+      "caption": "Branded sign-in entry point for the inControl platform."
+    },
+    {
+      "title": "Dashboards",
+      "route": "/dashboards",
+      "imagePath": "C:\\Workspace\\incontrol-metabase-demo\\output\\screenshots\\app-pages\\dashboards.png",
+      "caption": "Landing page where users choose between the Fee Dashboard and Fee Library experiences."
+    },
+    {
+      "title": "Fee Dashboard",
+      "route": "/fee-dashboard",
+      "imagePath": "C:\\Workspace\\incontrol-metabase-demo\\output\\screenshots\\app-pages\\fee-dashboard.png",
+      "caption": "Embeds QuickSight visuals independently so the app can compose a cleaner, more curated experience with a stronger native look and feel."
+    },
+    {
+      "title": "Fee Library",
+      "route": "/fee-library",
+      "imagePath": "C:\\Workspace\\incontrol-metabase-demo\\output\\screenshots\\app-pages\\fee-library.png",
+      "caption": "Embeds the full QuickSight dashboard, which is better suited to broader dashboard exploration and custom dashboard use cases."
+    }
+  ],
+  "summary": {
+    "feeDashboard": "Embeds QuickSight visuals independently for a more curated, app-native experience.",
+    "feeLibrary": "Embeds the full QuickSight dashboard for broader exploration and custom dashboard use cases."
+  }
+}
