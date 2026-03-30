@@ -635,7 +635,7 @@ export function QuickSightVisualGrid({ query }: QuickSightVisualGridProps) {
                     <article className="panel-shadow overflow-hidden rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-surface)]">
                         <div className="border-b border-[var(--color-border-soft)] bg-[var(--color-surface)] px-4 py-3">
                             <h3 className="text-base font-bold text-[var(--color-brand-600)]">
-                                1 - Gross Fees by Scheme and Business Unit
+                                Gross Fees by Business Unit
                             </h3>
                         </div>
 
