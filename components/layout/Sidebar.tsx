@@ -39,7 +39,7 @@ const menuItems: MenuItem[] = [
         })),
     },
     { icon: FileText, label: 'Incontrol Panel', blocked: true },
-    { icon: BarChart3, label: 'Analytics & Reports', blocked: true },
+    { icon: BarChart3, label: 'Analytics & Reports', href: '/analytics' },
     {
         icon: PiggyBank,
         label: 'Saving Opportunities',
